@@ -1,7 +1,8 @@
 {
   "name": "ember-dev-test",
   "scripts": {
-    "start": "vercel dev",
+    "start:api": "vercel dev",
+    "start:app": "expo start",
     "deploy": "prisma db push --preview-feature",
     "seed": "prisma db seed --preview-feature",
     "generate": "npm -s run generate:prisma && npm -s run generate:nexus && npm -s run generate:apollo",
