@@ -4,7 +4,16 @@ import TodoListPage from './components/TodoListPage';
 
 const client = new ApolloClient({
   uri: 'http://localhost:3000/api/graphql',
-  cache: new InMemoryCache()
+  cache: new InMemoryCache({
+    typePolicies: {
+      Todo: {
+        keyFields: ['id'],
+        merge(existing, incoming) {
+          return { ...existing, ...incoming }
+        },
+      },
+    },
+  })
 });
 
 export default function App() {
