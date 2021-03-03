@@ -1,9 +1,10 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { gql, useMutation } from '@apollo/client';
+import { updateTodoMutationCache, deleteTodoMutationCache } from '../api/queries';
 import { TodosQuery_todos } from '../apollo/generated/apollo-types/TodosQuery';
-import { DeleteTodoMutation, DeleteTodoMutationVariables } from '../apollo/generated/apollo-types/DeleteTodoMutation';
-import { UpdateTodoMutation, UpdateTodoMutationVariables } from '../apollo/generated/apollo-types/UpdateTodoMutation';
+import { DeleteTodoMutation, DeleteTodoMutationVariables, DeleteTodoMutation_deleteOneTodo } from '../apollo/generated/apollo-types/DeleteTodoMutation';
+import { UpdateTodoMutation, UpdateTodoMutationVariables, UpdateTodoMutation_updateOneTodo } from '../apollo/generated/apollo-types/UpdateTodoMutation';
 
 const TodoItem = ({ id, todo, complete }: TodosQuery_todos) => {
   const [updateTodo] = useMutation<UpdateTodoMutation, UpdateTodoMutationVariables>(gql`
@@ -15,14 +16,10 @@ const TodoItem = ({ id, todo, complete }: TodosQuery_todos) => {
     }
   `, {
     update(cache, { data }) {
-      const { id, complete, __typename } = data?.updateOneTodo || {}
-      cache.modify({
-        id: cache.identify({ id, __typename }),
-        fields: {
-          complete: () => !!complete
-        }
-      })
-    }
+      const todoItem = data?.updateOneTodo || { id, complete: !complete } as UpdateTodoMutation_updateOneTodo;
+      updateTodoMutationCache<UpdateTodoMutation>(cache, todoItem);
+    },
+    errorPolicy: 'ignore',
   })
 
   const [deleteTodo] = useMutation<DeleteTodoMutation, DeleteTodoMutationVariables>(gql`
@@ -33,14 +30,8 @@ const TodoItem = ({ id, todo, complete }: TodosQuery_todos) => {
     }
   `, {
     update(cache, { data }) {
-      const { id, __typename } = data?.deleteOneTodo || {}
-      cache.modify({
-        fields: {
-          todos: (existingTodos = []) => existingTodos.filter(({ __ref }: any) =>
-            __ref !== cache.identify({ id, __typename })
-          )
-        }
-      });
+      const todoItem = data?.deleteOneTodo || { id } as DeleteTodoMutation_deleteOneTodo;
+      deleteTodoMutationCache(cache, todoItem);
     }
   })
 
